@@ -10,9 +10,6 @@ import pl.sector17.sector17.repository.UserRepository;
 @Controller
 @RequestMapping("/login")
 public class LoginController {
-    @Autowired
-    UserRepository userRepository;
-
     @RequestMapping(value = "/login", method = RequestMethod.GET)
     public ModelAndView login() {
         ModelAndView modelAndView = new ModelAndView();
