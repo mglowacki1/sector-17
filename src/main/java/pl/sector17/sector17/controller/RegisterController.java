@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import pl.sector17.sector17.model.User;
+import pl.sector17.sector17.model.VerificationToken;
 import pl.sector17.sector17.repository.UserRepository;
 import pl.sector17.sector17.service.UserDetailsServiceImp;
 
@@ -26,6 +27,7 @@ import javax.mail.internet.MimeMessage;
 import javax.validation.Valid;
 import java.util.Date;
 import java.util.Properties;
+import java.util.UUID;
 
 
 @Controller
@@ -68,6 +70,10 @@ public class RegisterController {
             modelAndView.setViewName("register");
         } else {
             userDetailsService.saveUser(user);
+            VerificationToken token = new VerificationToken();
+            token.setUser(user);
+            token.setToken(UUID.randomUUID().toString());
+            userDetailsService.saveToken(token);
 
 
             Properties properties = System.getProperties();
@@ -82,8 +88,8 @@ public class RegisterController {
             mimeMessage.setSubject("Confirm Your Sector 17 account");
             String emailBody= "<p>Do not reply to this email!<p>" +
                     "<p>To confirm your account please click the link below:<p></br>" +
-                    "<a href=\"http://"+ applicationDomainName+":"+applicationDomainPort+"/confirm?k="
-                    +user.getUsername()+"\">Account Confirmation Link</a>\n";
+                    "<a href=\"http://"+ applicationDomainName+":"+applicationDomainPort+"/confirm?token="
+                    +token.getToken()+"\">Account Confirmation Link</a>\n";
 
             mimeMessage.setContent(emailBody,"text/html");
             Transport transport = session.getTransport("smtp");
@@ -97,8 +103,9 @@ public class RegisterController {
     }
 
     @RequestMapping(value = "/confirm", method = RequestMethod.GET)
-    public ModelAndView confirm(@RequestParam String k) {
-        userDetailsService.confirmUser(k);
+    public ModelAndView confirm(@RequestParam String token) {
+
+        userDetailsService.confirmUser(token);
         ModelAndView modelAndView = new ModelAndView();
         modelAndView.setViewName("confirmed");
         return modelAndView;
