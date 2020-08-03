@@ -92,11 +92,6 @@ public class UserDetailsServiceImp implements UserDetailsService {
         User user = token.getUser();
         user.setEnabled(true);
         userRepository.save(user);
-        tokenRepository.delete(token);
-    }
-
-    public void deleteToken(String tokenvalue){
-        VerificationToken token = tokenRepository.findByToken(tokenvalue);
-        tokenRepository.delete(token);
+        tokenRepository.deleteByUserId(user.getId());
     }
 }

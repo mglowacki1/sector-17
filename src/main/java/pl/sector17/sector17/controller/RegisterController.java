@@ -121,7 +121,7 @@ public class RegisterController {
             Session session = Session.getDefaultInstance(properties, null);
 
             MimeMessage mimeMessage = new MimeMessage(session);
-            mimeMessage.addRecipient(Message.RecipientType.TO, new InternetAddress(email));
+            mimeMessage.addRecipient(Message.RecipientType.TO, new InternetAddress(user.getEmail()));
             mimeMessage.setSubject("Confirm Your Sector 17 account");
             String emailBody= "<p>Do not reply to this email!<p>" +
                     "<p>To confirm your account please click the link below:<p></br>" +
@@ -146,7 +146,6 @@ public class RegisterController {
             modelAndView.setViewName("confirmed");
             return modelAndView;
         } else{
-            userDetailsService.deleteToken(token);
             ModelAndView modelAndView = new ModelAndView();
             modelAndView.setViewName("token-expired");
             return modelAndView;
