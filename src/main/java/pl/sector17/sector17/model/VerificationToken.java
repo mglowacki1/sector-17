@@ -22,7 +22,7 @@ public class VerificationToken {
     @JoinColumn(nullable = false, name = "user_id")
     private User user;
 
-    private Timestamp expiryDate = calculateExpiryDate(30);
+    private Timestamp expiryDate = calculateExpiryDate(1);
 
     private Timestamp calculateExpiryDate(int expiryTimeInMinutes) {
         Calendar cal = Calendar.getInstance();

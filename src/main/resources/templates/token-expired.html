@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
+<head>
+    <title>Register</title>
+</head>
+<body>
+<h1>Verification token expired. Provide us your email address to generate new token.</h1>
+<form th:action="@{/resend}" method="post">
+    <div><label> Email: <input type="text" name="email"/> </label></div>
+    <div><input type="submit" value="Resend verification token"/></div>
+</form>
+</body>
+</html>

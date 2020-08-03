@@ -102,12 +102,54 @@ public class RegisterController {
         return modelAndView;
     }
 
+    @RequestMapping(value = "/resend", method = RequestMethod.POST)
+    public ModelAndView resendVerificationToken(@Valid String email) throws MessagingException {
+        ModelAndView modelAndView = new ModelAndView();
+
+            User user = userDetailsService.loadUserByEmail(email);
+            VerificationToken token = new VerificationToken();
+            token.setUser(user);
+            token.setToken(UUID.randomUUID().toString());
+            userDetailsService.saveToken(token);
+
+
+            Properties properties = System.getProperties();
+            properties.put("mail.smtp.port", applicationMailPort);
+            properties.put("mail.smtp.auth", applicationMailAuth);
+            properties.put("mail.smtp.starttls.enable", getApplicationMailTtls);
+
+            Session session = Session.getDefaultInstance(properties, null);
+
+            MimeMessage mimeMessage = new MimeMessage(session);
+            mimeMessage.addRecipient(Message.RecipientType.TO, new InternetAddress(email));
+            mimeMessage.setSubject("Confirm Your Sector 17 account");
+            String emailBody= "<p>Do not reply to this email!<p>" +
+                    "<p>To confirm your account please click the link below:<p></br>" +
+                    "<a href=\"http://"+ applicationDomainName+":"+applicationDomainPort+"/confirm?token="
+                    +token.getToken()+"\">Account Confirmation Link</a>\n";
+
+            mimeMessage.setContent(emailBody,"text/html");
+            Transport transport = session.getTransport("smtp");
+            transport.connect(applicationMailHost,applicationMailEmail,applicationMailPassword);
+            transport.sendMessage(mimeMessage,mimeMessage.getAllRecipients());
+            transport.close();
+            modelAndView.setViewName("login");
+
+        return modelAndView;
+    }
+
     @RequestMapping(value = "/confirm", method = RequestMethod.GET)
     public ModelAndView confirm(@RequestParam String token) {
-
-        userDetailsService.confirmUser(token);
-        ModelAndView modelAndView = new ModelAndView();
-        modelAndView.setViewName("confirmed");
-        return modelAndView;
+        if(userDetailsService.checkTokenExpiration(token)){
+            userDetailsService.confirmUser(token);
+            ModelAndView modelAndView = new ModelAndView();
+            modelAndView.setViewName("confirmed");
+            return modelAndView;
+        } else{
+            userDetailsService.deleteToken(token);
+            ModelAndView modelAndView = new ModelAndView();
+            modelAndView.setViewName("token-expired");
+            return modelAndView;
+        }
     }
 }

@@ -16,6 +16,7 @@ import pl.sector17.sector17.repository.RoleRepository;
 import pl.sector17.sector17.repository.TokenRepository;
 import pl.sector17.sector17.repository.UserRepository;
 
+import java.sql.Timestamp;
 import java.util.*;
 
 @Service
@@ -51,6 +52,15 @@ public class UserDetailsServiceImp implements UserDetailsService {
         }
     }
 
+    public User loadUserByEmail(String email) throws UsernameNotFoundException {
+        User user = userRepository.findByEmail(email);
+        if(user != null) {
+            return user;
+        } else {
+            throw new UsernameNotFoundException("email not found");
+        }
+    }
+
 
     private List<GrantedAuthority> getUserAuthority(Set<Role> userRoles) {
         Set<GrantedAuthority> roles = new HashSet<>();
@@ -67,11 +77,26 @@ public class UserDetailsServiceImp implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), user.isEnabled(), true, true, true, authorities);
     }
 
+    public boolean checkTokenExpiration(String tokenvalue){
+        VerificationToken token = tokenRepository.findByToken(tokenvalue);
+        Timestamp expiryDate = token.getExpiryDate();
+        if (expiryDate.after(new Timestamp(System.currentTimeMillis()))){
+            return true;
+        } else{
+            return false;
+        }
+    }
+
     public void confirmUser(String tokenvalue) {
         VerificationToken token = tokenRepository.findByToken(tokenvalue);
         User user = token.getUser();
         user.setEnabled(true);
         userRepository.save(user);
+        tokenRepository.delete(token);
+    }
+
+    public void deleteToken(String tokenvalue){
+        VerificationToken token = tokenRepository.findByToken(tokenvalue);
         tokenRepository.delete(token);
     }
 }
